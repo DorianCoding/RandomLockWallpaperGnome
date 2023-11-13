@@ -1,4 +1,9 @@
-Fork from the extension described below. However in this version, the screensaver on lock screen won't blur in standby mode but only in prompt mode.
+Fork from the extension described below. However in this version, the screensaver on lock screen won't blur in standby mode but only in prompt mode so you can enjoy screensaver :laughing:.
+Under MIT license like the fork.
+
+Lock screensaver            |  Lock prompt
+:-------------------------:|:-------------------------:
+![Lock without blur](/assets/lock_free.png)  |  ![Lock with blur on prompt](/assets/lock_blur.png)
 
 RandomWallpaperGnome3
 =====================
