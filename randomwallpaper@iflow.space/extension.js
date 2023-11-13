@@ -9,7 +9,7 @@ const Timer = Self.imports.timer;
 let wallpaperController;
 let panelMenu;
 let logger;
-
+const UnlockDialog = imports.ui.unlockDialog
 function init(metaData) { }
 
 function enable() {
@@ -20,6 +20,15 @@ function enable() {
 	logger.info("Enable extension.");
 	panelMenu = new RandomWallpaperMenu.RandomWallpaperMenu(wallpaperController);
 	panelMenu.init();
+	if (wallpaperController._settings.get('change-lock-screen', 'boolean')) {
+		UnlockDialog.UnlockDialog.prototype._showClock = wallpaperController._showClockNew;
+		UnlockDialog.UnlockDialog.prototype._showPrompt = wallpaperController._showPromptNew;
+	} else {
+		logger.warn("Value is");
+	}
+	if (Main.screenShield._dialog)
+		Main.screenShield._dialog._updateBackgrounds();
+	this.enabled = true;
 }
 
 function disable() {
@@ -29,9 +38,17 @@ function disable() {
 
 	// destroy timer singleton
 	Timer.AFTimerDestroySingleton();
-
+	if (wallpaperController._settings.get('change-lock-screen', 'boolean')) {
+		UnlockDialog.UnlockDialog.prototype._showClock = wallpaperController._showClockNew;
+		UnlockDialog.UnlockDialog.prototype._showPrompt = wallpaperController._showPromptNew;
+	}
 	// clear references
 	wallpaperController = null;
 	panelMenu = null;
 	logger = null;
+
+	if (Main.screenShield._dialog)
+		Main.screenShield._dialog._updateBackgrounds();
+
+	this.enabled = false;
 }

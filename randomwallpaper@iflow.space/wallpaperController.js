@@ -1,15 +1,14 @@
 const Mainloop = imports.gi.GLib;
 
 // Filesystem
-const Gio = imports.gi.Gio;
-
+const { Clutter, Gio } = imports.gi;
 //self
 const Self = imports.misc.extensionUtils.getCurrentExtension();
 const SourceAdapter = Self.imports.sourceAdapter;
 const Prefs = Self.imports.settings;
 const Timer = Self.imports.timer;
 const HistoryModule = Self.imports.history;
-
+const CROSSFADE_TIME = 300;
 const LoggerModule = Self.imports.logger;
 
 /*
@@ -27,8 +26,7 @@ var WallpaperController = class {
 		this.preferencesContext = prefsContext;
 		this.logger = new LoggerModule.Logger('RWG3', 'WallpaperController');
 		let xdg_cache_home = Mainloop.getenv('XDG_CACHE_HOME')
-		if (!xdg_cache_home)
-		{
+		if (!xdg_cache_home) {
 			xdg_cache_home = `${Mainloop.getenv('HOME')}/.cache`
 		}
 		this.wallpaperlocation = `${xdg_cache_home}/${Self.metadata['uuid']}/wallpapers/`;
@@ -65,11 +63,45 @@ var WallpaperController = class {
 
 		this.currentWallpaper = this._getCurrentWallpaper();
 	}
-
 	_updateHistory() {
 		this._historyController.load();
 	}
+	_showClockNew() {
+		if (this._activePage === this._clock)
+			return;
+		this._activePage = this._clock;
+		let children = this._backgroundGroup.get_children();
+		children.forEach(child => {
+			let effects = child.get_effects();
+			if (effects.length > 0) {
+				child.myEffect = effects[0];
+				child.remove_effect(child.myEffect);
+			}
+		});
 
+		this._adjustment.ease(0, {
+			duration: CROSSFADE_TIME,
+			mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+			onComplete: () => this._maybeDestroyAuthPrompt(),
+		});
+	}
+	_showPromptNew() {
+		this._ensureAuthPrompt();
+		if (this._activePage === this._promptBox)
+			return;
+		this._activePage = this._promptBox;
+
+		let children = this._backgroundGroup.get_children();
+		children.forEach(child => {
+			if (child.get_effects().length == 0)
+				child.add_effect(child.myEffect);
+		});
+
+		this._adjustment.ease(1, {
+			duration: CROSSFADE_TIME,
+			mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+		});
+	}
 	_updateAutoFetching() {
 		let duration = 0;
 		duration += this._settings.get('minutes', 'int');
@@ -174,12 +206,12 @@ var WallpaperController = class {
 	 * @private
 	 */
 	_setBackground(path, callback) {
-		let background_setting = new Gio.Settings({schema: "org.gnome.desktop.background"});
+		let background_setting = new Gio.Settings({ schema: "org.gnome.desktop.background" });
 		path = "file://" + path;
 
 		this._setPictureUriOfSettingsObject(background_setting, path, () => {
 			if (this._settings.get('change-lock-screen', 'boolean')) {
-				let screensaver_setting = new Gio.Settings({schema: "org.gnome.desktop.screensaver"});
+				let screensaver_setting = new Gio.Settings({ schema: "org.gnome.desktop.screensaver" });
 
 				this._setPictureUriOfSettingsObject(screensaver_setting, path, () => {
 					// call callback if given
@@ -241,7 +273,7 @@ var WallpaperController = class {
 	}
 
 	_getCurrentWallpaper() {
-		let background_setting = new Gio.Settings({schema: "org.gnome.desktop.background"});
+		let background_setting = new Gio.Settings({ schema: "org.gnome.desktop.background" });
 		return background_setting.get_string("picture-uri").replace(/^(file:\/\/)/, "");
 	}
 
