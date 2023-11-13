@@ -1,3 +1,5 @@
+Fork from the extension described below. However in this version, the screensaver on lock screen won't blur in standby mode but only in prompt mode.
+
 RandomWallpaperGnome3
 =====================
 
